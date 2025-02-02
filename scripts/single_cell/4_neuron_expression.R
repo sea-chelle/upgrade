@@ -1,4 +1,4 @@
-# loading required packages
+# load required packages
 library(Seurat)
 library(tidyverse)
 library(ggplot2)
@@ -6,33 +6,7 @@ library(MAST)
 library(ComplexHeatmap)
 library(circlize)
 
-# neuropeptides amd IEG expression in major cell types --------------------------------------------------------------------------------
-
-# log fold change in neuropeptide expression in all neuronal cells compared to other major cell types
-neuron_neuropeptide <- FindMarkers(seurat,
-                                  ident.1 = "Neuron",
-                                  features = c("CRH", "OXT", "AVP", "HCRT", "TRH", "POMC", "AGRP", "NPY",
-                                               "TAC1", "SST", "KISS1", "GNRH1", "GHRH", "PMCH"),
-                                  test.use = "MAST")
-
-# plot barplot
-neuron_neuropeptide$gene <- factor(rownames(neuron_neuropeptide), levels = c("CRH", "OXT", "AVP", "HCRT", "TRH", "POMC", "AGRP", "NPY", 
-                                                                             "TAC1", "SST", "KISS1", "GNRH1", "GHRH", "PMCH"))
-
-ggplot(neuron_neuropeptide, aes(x = gene, y = avg_log2FC)) +
-  geom_bar(stat = "identity", position = position_dodge(width = 0.5), width = 0.5, fill = "#377eb8") +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "black") + 
-  labs(x = "Neuropeptide", y = "Log2 Fold Change", title = "Neuropeptide expression in neurons") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  theme_classic() +
-  theme(axis.text.x = element_text(family = "Arial", size = 11, color = "black"),
-        axis.text.y = element_text(family = "Arial", size = 11, color = "black"),
-        axis.title = element_text(family = "Arial", size = 12, color = "black"),
-        axis.title.x = element_blank(),
-        plot.title = element_text(family = "Arial", size = 16, hjust = 0.5, color = "black"),
-        legend.title = element_blank(),
-        legend.text = element_text(family = "Arial", size = 11, color = "black"),
-        panel.grid = element_blank())
+# neuron subtype expression --------------------------------------------------------------------------------
 
 # neuropeptide expression in neuronal subtypes
 neuronsubtype_neuropeptide <-  FindAllMarkers(neuron,
@@ -73,31 +47,7 @@ neuronsubtype_neuropeptide_plot <- Heatmap(neuronsubtype_neuropeptide_plot,
                                            width = unit(3.6, "cm"),
                                            height = unit(12, "cm"))
 
-# IEG expression in neurons 
-neuron_IEG <- FindMarkers(seurat,
-                          ident.1 = "Neuron",
-                          features = c("ARC", "DUSP1", "DUSP6", "DUSP14", "EGR1", "EGR2", "EGR3", "EGR4",
-                                                      "NR4A1", "NR4A2", "NR4A3", "NPAS1", "NPAS2", "NPAS3", "NPAS4",
-                                                      "JUN", "FOS", "FOSL2", "FOSB"),
-                          test.use = "MAST")
-
-# plot barplot
-ggplot(neuron_IEG, aes(x = rownames(neuron_IEG), y = avg_log2FC)) +
-  geom_bar(stat = "identity", position = position_dodge(width = 0.5), width = 0.5, fill = "#377eb8") +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "black") + 
-  labs(x = "Neuropeptide", y = "Log2 Fold Change", title = "IEG expression in neurons") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  theme_classic() +
-  theme(axis.text.x = element_text(family = "Arial", size = 11, color = "black"),
-        axis.text.y = element_text(family = "Arial", size = 11, color = "black"),
-        axis.title = element_text(family = "Arial", size = 12, color = "black"),
-        axis.title.x = element_blank(),
-        plot.title = element_text(family = "Arial", size = 16, hjust = 0.5, color = "black"),
-        legend.title = element_blank(),
-        legend.text = element_text(family = "Arial", size = 11, color = "black"),
-        panel.grid = element_blank())
-
-# neuropeptide expression in neuronal subtypes
+# IEG expression in neuronal subtypes
 neuronsubtype_IEG <-  FindAllMarkers(neuron, features = c("ARC", "DUSP1", "DUSP6", "DUSP14", "EGR1", "EGR2", "EGR3", "EGR4",
                                                            "NR4A1", "NR4A2", "NR4A3", "NPAS1", "NPAS2", "NPAS3", "NPAS4",
                                                            "JUN", "FOS", "FOSL2", "FOSB"),
@@ -135,9 +85,9 @@ neuronsubtype_IEG_plot <- Heatmap(neuronsubtype_IEG_plot,
                                            width = unit(3.6, "cm"),
                                            height = unit(16, "cm"))
 
-# neuropeptides amd IEG expression by gestational week --------------------------------------------------------------------------------
+# neuropeptides amd IEG expression by gestational week in neurons --------------------------------------------------------------------------------
 
-# set identity as gestational week
+# set identity as gestational week for DEG analysis
 neuron_GW <- SetIdent(neuron, value = neuron$gestational.week)
 
 neuron_neuropeptide_GW <- FindAllMarkers(neuron_GW, features = c("CRH", "OXT", "AVP", "HCRT", "TRH", "POMC", "AGRP", "NPY", 
