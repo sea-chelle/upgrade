@@ -1,4 +1,4 @@
-# loading required packages
+# load required packages
 library(Seurat)
 library(tidyverse)
 library(ggplot2)
