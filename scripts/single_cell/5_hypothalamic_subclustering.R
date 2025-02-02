@@ -1,4 +1,4 @@
-# loading required packages
+# load required packages
 library(Seurat)
 library(tidyverse)
 library(ggplot2)
@@ -8,7 +8,7 @@ library(ggplot2)
 # subset hypothalamic neurons
 hypothalamic <- subset(neuron, idents = c("Glutamatergic", "GABAergic", "Histaminergic"))
 
-# perform standard seurat workflow as usual
+# perform standard seurat workflow
 hypothalamic <- NormalizeData(hypothalamic)
 hypothalamic <- FindVariableFeatures(hypothalamic, 
                                      selection.method = "vst", 
@@ -24,12 +24,12 @@ hypothalamic <- ScaleData(hypothalamic,
 hypothalamic <- RunPCA(hypothalamic, features = VariableFeatures(object = hypothalamic))
 ElbowPlot(hypothalamic)
 
-# plot UMAP
+# run UMAP
 hypothalamic <- FindNeighbors(hypothalamic, dims = 1:35)
 hypothalamic <- FindClusters(hypothalamic, resolution = 1.6)
 hypothalamic <- RunUMAP(hypothalamic, dims = 1:35)
 
-# visualise clusters
+# plot UMAP to visualise clusters
 DimPlot(hypothalamic, reduction = "umap", group.by = "seurat_clusters", label = T)
 
 # hypothalamic nuclei identification using markers from paper --------------------------------------------------------------------------------------
@@ -144,13 +144,13 @@ VlnPlot(hypothalamic,
 
 # hypothalamic nuclei identification using differentially expressed genes --------------------------------------------------------------------------------------
 
-# find differentially expressed genes from each neuron type
+# find top expressed genes from each cluster
 hypothalamic_markers <- FindAllMarkers(hypothalamic, only.pos = T, 
                                        min.pct = 0.25,
                                        min.diff.pct = 0.25,
                                        logfc.threshold = 0.25)
 
-# get top 5 markers for each cluster
+# create function to get top 5 markers for each cluster
 top10_markers_hypothalamic <- function(x){
   hypothalamic_markers[hypothalamic_markers$cluster == x, ] %>% head(n=10)}
 
@@ -159,7 +159,7 @@ top10_markers_hypohtlamaic_df <- map_dfr(0:49, top10_markers_hypothalamic)
 
 # renaming clusters --------------------------------------------------------------------------------------------
 
-# rename clusters to neurons based on transcription factor/neuropeptide (marker) expression
+# assign names to clusters based on expression of neuropeptides and transcription factors
 new_cluster_ids_hypothalamic <- c("HDC/SLC18A2/GULP1", "GBX2/TCF7L2", "PVN/SON", "GBX2/TCF7L2", "GBX2/TCF7L2", "SST/PCP4/OTP", "PITX2/LHX5/SIM1", "GBX2/TCF7L2", "GHRH/GSX1", "ADCYAP1/PITX2", "TBX3/ISL1",
                                   "MMN", "CRABP1/CALB2", "FEZF1/NPTX2", "KISS1/TAC3", "PH", "Unknown", "AH", "HDC/SLC18A2/GULP1", "Unknown", "HDC/SLC18A2/GULP1",
                                   "SST/LHX6/ARX", "SST/LHX6/ARX", "POMC/CLBN1", "AH", "PVN/SON", "CALB2/BARHL1/BARHL2", "TBX3/ISL1", "GHRH/GSX1", "ISL1/MEIS2/SST", "DMH",
@@ -169,11 +169,11 @@ new_cluster_ids_hypothalamic <- c("HDC/SLC18A2/GULP1", "GBX2/TCF7L2", "PVN/SON",
 names(new_cluster_ids_hypothalamic) <- levels(hypothalamic)
 hypothalamic <- RenameIdents(hypothalamic, new_cluster_ids_hypothalamic)
 
-# visualise clusters after cell-type identification
+# visualise UMAP after assigning cluster names 
 hypothalamic@meta.data$"markers" <- as.factor(hypothalamic@active.ident)
 DimPlot(hypothalamic, reduction = "umap", group.by="markers") 
 
-# assign markers to hypothalamic area
+# map marker names to hypothalamic area
 hypothalamic@meta.data <- hypothalamic@meta.data %>%
   mutate(nuclei = case_when(
     markers == "SCN" ~ "SCN",
@@ -207,7 +207,7 @@ hypothalamic@meta.data <- hypothalamic@meta.data %>%
     markers == "CRABP1/CALB2" ~ "TT",
   ))
 
-# visualise hypothalamic seurat object by nuclei
+# visualise hypothalamic seurat object by hypothalamic area
 DimPlot(hypothalamic, reduction = "umap", group.by= "nuclei", label = T) 
 
 ummary_genes_nuclei <- tapply(hypothalamic$nFeature_RNA, hypothalamic$nuclei, summary)
