@@ -1,14 +1,14 @@
-# loading required packages
+# load required packages
 library(Seurat)
 library(tidyverse)
 library(ggplot2)
 
 # UMAP for subclustering of neuronal cells ----------------------------------------
 
-# subset neuronal clusters for subclustering
+# subset neurons for subclustering
 neuron <- subset(seurat, idents = "Neuron")
 
-# perform standard seurat workflow as usual
+# perform standard seurat workflow
 neuron <- NormalizeData(neuron)
 neuron <- FindVariableFeatures(neuron, 
                                selection.method = "vst", 
@@ -24,12 +24,12 @@ neuron <- ScaleData(neuron,
 neuron <- RunPCA(neuron, features = VariableFeatures(object = neuron))
 ElbowPlot(neuron)
 
-# plot UMAP
+# run UMAP
 neuron <- FindNeighbors(neuron, dims = 1:50)
 neuron <- FindClusters(neuron, resolution = 1.3)
 neuron <- RunUMAP(neuron, dims = 1:50)
 
-# visualise clusters
+# plot clusters
 DimPlot(neuron, reduction = "umap", group.by = "seurat_clusters", label = T)
 
 # neuron cell type identification using marker expression ----------------------------------------------
@@ -66,13 +66,13 @@ VlnPlot(neuron,
 
 # neuron subtype identification using differentially expressed genes ----------------------------------------------
 
-# find differentially expressed genes from each cluster
+# find top expressed genes from each cluster
 neuron_markers <- FindAllMarkers(neuron, only.pos = T, 
                                  min.pct = 0.25,
                                  min.diff.pct = 0.25,
                                  logfc.threshold = 0.25)
 
-# get top 5 markers for each cluster
+# create a function to get top 5 markers for each cluster
 top5_markers_neuron <- function(x){
   neuron_markers[neuron_markers$cluster == x, ] %>% head(n=5)}
 
@@ -81,7 +81,7 @@ top5_markers_neuron_df <- map_dfr(0:49, top5_markers_neuron)
 
 # renaming clusters ----------------------------------------------
 
-# rename cluster numbers to neuron subtypes
+# assign neuronal subtype names to each cluster
 new_cluster_ids_neuron <- c("Glutamatergic","Histaminergic", "Glutamatergic", "Glutamatergic", "Cholinergic", "Unknown", "GABAergic", "GABAergic", "Glutamatergic", "Glutamatergic", "Glutamatergic",
                             "Glutamatergic", "Glutamatergic", "GABAergic", "GABAergic", "Glutamatergic", "Histaminergic", "GABAergic", "GABAergic", "Histaminergic", "GABAergic",
                             "GABAergic", "Glutamatergic", "GABAergic", "Glutamatergic", "GABAergic", "GABAergic", "Glutamatergic", "Glutamatergic", "Glutamatergic", "GABAergic",
