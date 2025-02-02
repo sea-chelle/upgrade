@@ -1,22 +1,19 @@
-# loading required packages
+# load required packages
 library(Seurat)
 library(tidyverse)
 library(ggplot2)
 
-# set working directory
-setwd("/Volumes/ritd-ag-project-rd01lx-nhhan20/Michelle/")
-
 # UMAP dimensionality reduction for clustering --------------------------------------------------------------------------------
 
-# plot UMAP
+# run UMAP
 seurat <- FindNeighbors(seurat, reduction = "harmony", dims = 1:50)
 seurat <- FindClusters(seurat, resolution = 1.21)
 seurat <- RunUMAP(seurat, reduction = "harmony", dims = 1:50)
 
-# visualise clusters
+# plot UMAP for cluster visualisation
 DimPlot(seurat, reduction = "umap", group.by = "cell_type", label = T) 
 
-# look at how many cells are in each cell type
+# look at how many cells are in each cluster
 table(seurat@meta.data$seurat_clusters) 
 
 # major cell type identification using markers from paper --------------------------------------------------------------------------------
@@ -134,22 +131,22 @@ VlnPlot(seurat,
                     
 # cell type identification using top DEGs --------------------------------------------------------------------------------------
                     
-# finding differentially expressed genes from each cell type
+# find top expressed genes for each cluster
 major_markers <- FindAllMarkers(seurat, only.pos = T, 
                                 min.pct = 0.25,
                                 min.diff.pct = 0.25,
                                 logfc.threshold = 0.25)
                     
-# getting top 5 markers for each cluster
+# create function to get top 5 markers for each cluster
 top5_markers <- function(x){
 major_markers[major_markers$cluster == x, ] %>% head(n=5)}
                     
-# creating a table of top 5 markers for each cluster
+# create a table of top 5 markers for each cluster
 top5_markers_df <- map_dfr(0:41, top5_markers)
                     
 # renaming clusters --------------------------------------------------------------------------------------
                     
-# renaming cluster numbers to cell types
+# assign cell-type names to clusters
 new_cluster_ids <- c("Astrocyte", "OPC", "Astrocyte", "NE", "OPC", "Neuron", "Neuron", "Neuron", "Neuron", "Microglia", "NP",
                      "Astrocyte", "Astrocyte", "Neuron", "Neuron", "NE", "OL", "Neuron", "Neuron", "Neuron", "NE",
                      "NE", "OL", "Ependymal", "OPC", "Neuron", "VLMC", "Neuron", "Mural", "NP", "NE",
@@ -159,6 +156,6 @@ new_cluster_ids <- c("Astrocyte", "OPC", "Astrocyte", "NE", "OPC", "Neuron", "Ne
 names(new_cluster_ids) <- levels(seurat)
 seurat <- RenameIdents(seurat, new_cluster_ids)
                     
-# visualising UMAP after cell-type identification
+# visualise UMAP after cell-type identification
 seurat@meta.data$"cell_type" <- as.factor(seurat@active.ident)
 DimPlot(seurat, reduction = "umap", group.by="cell_type", label = TRUE) 
