@@ -7,10 +7,7 @@ library(scDblFinder)
 library(BiocParallel)
 library(harmony)
 
-# set working directory
-setwd("/Volumes/ritd-ag-project-rd01lx-nhhan20/Michelle/")
-
-# importing count matrices and converting to seurat object --------------------------------------------------------------------------------
+# import count matrices and converting to seurat object --------------------------------------------------------------------------------
 
 # get data location
 dirs <- list.dirs(path = "./datasets/zhou_2022/matrix/", recursive = FALSE, full.names = FALSE)
@@ -62,31 +59,31 @@ seurat # 295985 cells
 
 # QC and filtering --------------------------------------------------------------------------------
 
-# calculate mitochondiral DNA percentage for each cell and add to metadata
+# calculate percentage mitochondiral DNA for each cell and add to metadata
 seurat$percentage_mt <- PercentageFeatureSet(seurat, pattern = "^MT-")
 
-# calculate ribosomal DNA percentage for each cell and add to metadata
+# calculate percentage ribosomal DNA for each cell and add to metadata
 seurat$percentage_rb <- PercentageFeatureSet(seurat, pattern = "^RP[SL]")
 
-# calculate haemoglobin DNA percentage for each cell and add to metadata
+# calculate percentage haemoglobin DNA for each cell and add to metadata
 seurat$percentage_hb <- PercentageFeatureSet(seurat, pattern = "HB[^(P)]")
 
-# filtering cells 
+# filter low quality cells 
 # expressing more than 200 but less than 4000 genes
 # expressing less than 10% mtDNA
 # expressing less than 10% rbDNA
 # expressing less than 5% hbDNA
 seurat <- subset(seurat, 
                  subset = nFeature_RNA > 200 &
-                   nFeature_RNA < 4000 &
+                   nFeature_RNA < 4000 & 
                    percentage_mt < 10 &
                    percentage_rb < 10 &
                    percentage_hb < 5)
 
-# checking how many cells after initial QC
+# check how many cells after initial QC
 seurat # 111431 cells
 
-# creatre SingleCellExperiment for doublet removal
+# create SingleCellExperiment
 seurat <- JoinLayers(seurat) 
 sce <- as.SingleCellExperiment(seurat)
 
@@ -95,13 +92,13 @@ sce <- scDblFinder(sce,
                    samples = sce@int_colData@rownames,
                    clusters = FALSE)
 
-# converting sce back into seurat object 
+# convert back to seurat object
 doublets <- as.Seurat(sce, counts = "counts", data = NULL)
 
-# removing doublets 
+# remove doublets from original seurat object
 seurat <- subset(doublets, subset = scDblFinder.class  == "singlet")
 
-# checking how many cells after doublet removal
+# check how many cells after doublet removal
 seurat # 102881 cells
 
 # perform standard seurat workflow and harmony batch correction --------------------------------------------------------------------------------
@@ -122,7 +119,7 @@ seurat <- CellCycleScoring(object = seurat,
                            g2m.features = cc.genes$g2m.genes,
                            s.features = cc.genes$s.genes)
 
-# continue with standard seurat workflow regressing out cell cycle stores and mtDNA
+# continue with standard seurat workflow - regress out cell cycle stores and mtDNA
 seurat <- ScaleData(seurat, 
                     vars.to.regress = c("S.Score", "G2M.Score", "percentage_mt"))
 
